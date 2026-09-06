@@ -1,40 +1,73 @@
-# Diagnóstico & Chat de Rede
+# Ferramenta de Rede
 
-Uma ferramenta de linha de comando (CLI) desenvolvida em Python que combina utilitários clássicos de diagnóstico de rede com um sistema de chat P2P (ponto a ponto) direto pelo terminal. 
-
-Este script foi projetado para facilitar testes rápidos de conectividade, resolução de DNS e comunicação simples entre máquinas na mesma rede (ou pela internet, caso haja redirecionamento de portas).
+Script em Python com um menu interativo que reúne várias utilidades de diagnóstico de rede: consulta de IP, gateway, DNS, tracert, jitter, nslookup e um chat simples entre máquinas na mesma rede.
 
 ## Funcionalidades
 
-**1. Diagnóstico de Rede Completo**
-*   **Identificação de IP:** Descobre automaticamente o IP local e o IP público da máquina.
-*   **Configuração de Rede:** Captura o Gateway Padrão e os Servidores DNS locais.
-*   **Análise de Ping:** Envia pacotes ICMP e calcula a latência média, o *jitter* (variação de latência) e a porcentagem de perda de pacotes.
-*   **Teste de Porta:** Verifica se uma porta TCP específica está aberta ou fechada em um IP alvo.
-*   **NSLookup & Tracert:** Realiza a resolução de nomes (DNS) e mapeia a rota (saltos) até o destino.
+1. **Mostrar IP** — exibe o IP local (da rede interna) e o IP público (via [ipify](https://www.ipify.org/)).
+2. **Mostrar Gateway** — identifica o gateway padrão (compatível com Windows e Linux).
+3. **Mostrar DNS** — lista os servidores DNS configurados (compatível com Windows e Linux).
+4. **Executar Tracert** — roda `tracert` (Windows) ou `traceroute` (Linux) até um destino.
+5. **Executar Jitter** — calcula o jitter médio (variação de latência) a partir de múltiplos pings.
+6. **Executar Nslookup** — consulta a resolução DNS de um domínio.
+7. **Chat** — troca mensagens em tempo real com outra máquina na mesma rede, via socket TCP.
 
-**2. Chat P2P Integrado**
-*   **Modo Servidor (Criar Sala):** Abre a porta `50000` na máquina local para aguardar conexões.
-*   **Modo Cliente (Entrar na Sala):** Conecta diretamente ao IP de um amigo para trocar mensagens no terminal em tempo real usando *threads*.
+## Requisitos
 
-## Pré-requisitos
+- Python 3.7 ou superior
+- Sistema operacional: Windows ou Linux
+  - No Linux, o comando `traceroute` precisa estar instalado (`sudo apt install traceroute` em distribuições baseadas em Debian/Ubuntu)
+- Conexão com a internet (para IP público e tracert/nslookup com destinos externos)
 
-*   **Python 3.x** instalado.
-*   **Sistema Operacional:** O código atual utiliza comandos nativos do Windows (`ipconfig`, `ping -n`, `tracert -h`, codificação `cp850`). Pode ser necessário adaptar as chamadas do `subprocess` para uso em sistemas Linux ou macOS.
+Não é necessário instalar nenhuma biblioteca externa — o script usa apenas módulos nativos do Python (`socket`, `urllib`, `subprocess`, `sys`, `re`, `threading`).
 
-## Como Usar
+## Como executar
 
-1. Clone o repositório ou baixe o arquivo `.py`.
-2. Abra o terminal e navegue até a pasta do arquivo.
-3. Execute o script:
-   ```bash
-   python nome_do_arquivo.py
-   ```
-4. Insira seu *Nickname* e uma chave de sessão quando solicitado.
-5. Escolha a ação desejada no menu principal:
-   * **[ 1 ]** Para testar uma conexão (requer um IP ou domínio e uma porta).
-   * **[ 2 ]** Para hospedar um chat e esperar alguém conectar no seu IP.
-   * **[ 3 ]** Para conectar ao chat de um amigo usando o IP dele.
+```bash
+python nome_do_arquivo.py
+```
 
-## Aviso Legal
-Esta é uma ferramenta educacional e de diagnóstico. Use as opções de teste de porta e envio de pacotes apenas em redes e servidores nos quais você tem permissão para realizar testes.
+Isso abre o menu interativo:
+
+```
+===== FERRAMENTA DE REDE =====
+1 - Mostrar IP (Local e Público)
+2 - Mostrar Gateway
+3 - Mostrar DNS
+4 - Executar Tracert
+5 - Executar Jitter
+6 - Executar Nslookup
+7 - Iniciar Chat
+0 - Sair
+===============================
+```
+
+Basta digitar o número da opção desejada e seguir as instruções exibidas.
+
+## Como testar o Chat
+
+O chat funciona com duas instâncias do script rodando ao mesmo tempo — uma "escuta" mensagens enquanto a outra se conecta a ela.
+
+### Testando na mesma máquina (sem precisar de outro PC)
+
+1. Abra dois terminais.
+2. Em cada um, rode `python redes.py` e escolha a opção **7**.
+3. Quando pedir o IP de destino, use `127.0.0.1` nos dois.
+
+> ⚠️ **Atenção:** como o código atual escuta e conecta na mesma porta (5000) para ambas as pontas, rodar duas instâncias na mesma máquina pode gerar erro de "porta em uso". Para testar localmente, ajuste a função `iniciarChat` para aceitar uma porta de escuta e uma porta de destino separadas, e use portas diferentes em cada terminal (ex: 5000 e 5001).
+
+### Testando entre dispositivos diferentes
+
+1. As duas máquinas precisam estar na **mesma rede** (mesmo Wi-Fi/LAN).
+2. Descubra o IP local de cada uma (opção 1 do menu).
+3. Libere a porta 5000 no firewall, se necessário.
+4. Em cada máquina, rode o script e escolha a opção 7, informando o IP da outra máquina como destino.
+
+Para rodar em celular ou tablet, é necessário um interpretador Python, como [Termux](https://termux.dev/) ou **Pydroid 3** (Android).
+
+## Limitações conhecidas
+
+- O parsing de `ipconfig` (gateway e DNS) foi construído para saídas em português e inglês; outros idiomas do Windows podem não ser reconhecidos corretamente.
+- O cálculo de jitter depende do formato de saída do `ping`, que varia entre idiomas do sistema operacional (`tempo=` em PT-BR, `time=` em EN-US).
+- O chat não possui criptografia nem autenticação — é indicado apenas para uso educacional em redes confiáveis.
+- Não há suporte nativo a macOS nas funções de gateway e tracert.

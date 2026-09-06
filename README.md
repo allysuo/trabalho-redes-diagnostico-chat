@@ -24,7 +24,7 @@ Não é necessário instalar nenhuma biblioteca externa — o script usa apenas 
 ## Como executar
 
 ```bash
-python nome_do_arquivo.py
+python redes.py
 ```
 
 Isso abre o menu interativo:
